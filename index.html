@@ -156,6 +156,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
         </div>
         <button id="trackButton" type="submit">Track order</button>
       </form>
+
+      <button id="restoreOrder" class="secondary-button" type="button" hidden>Autofill saved order</button>
       <div class="credential" id="newOrderCredentials" hidden>
         <strong>Your order was submitted!</strong>
         <small>Save both details below. Your private management code is shown only once and cannot be recovered if you lose it.</small>
@@ -219,12 +221,45 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const manageEditFields = document.getElementById("manageEditFields");
   let activeOrder = null;
 
+  const SAVED_ORDER_KEY = "swiper_redeem_saved_order_v1";
+  const restoreOrderButton = document.getElementById("restoreOrder");
+
+  function readSavedOrder() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SAVED_ORDER_KEY) || "null");
+      return saved && typeof saved.id === "string" && typeof saved.code === "string" ? saved : null;
+    } catch { return null; }
+  }
+
+  function saveOrderLocally(id, code) {
+    try {
+      localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify({ id, code, savedAt: Date.now() }));
+      restoreOrderButton.hidden = false;
+    } catch {
+      setStatus("Your browser couldn't save this order. Keep your order ID and private management code somewhere safe.", "error");
+    }
+  }
+
+  function fillSavedOrder(shouldTrack = false) {
+    const saved = readSavedOrder();
+    if (!saved) {
+      restoreOrderButton.hidden = true;
+      setStatus("No saved order was found on this device.", "error");
+      return;
+    }
+    document.getElementById("manageOrderId").value = saved.id;
+    document.getElementById("manageAccessCode").value = saved.code;
+    if (shouldTrack) trackOrder();
+    else setStatus("Saved order details filled in. Press Track order to view the latest status.", "success");
+  }
+
   function setOrderCredentials(id, code) {
     document.getElementById("newOrderId").textContent = id;
     document.getElementById("newOrderCode").textContent = code;
     document.getElementById("newOrderCredentials").hidden = false;
     document.getElementById("manageOrderId").value = id;
     document.getElementById("manageAccessCode").value = code;
+    saveOrderLocally(id, code);
   }
 
   async function manageOrder(action, values = {}) {
@@ -258,8 +293,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     }
   }
 
-  trackForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  async function trackOrder() {
     trackButton.disabled = true;
     trackButton.textContent = "Looking up…";
     try {
@@ -275,7 +309,21 @@ button:disabled{opacity:.42;cursor:not-allowed}
       trackButton.disabled = false;
       trackButton.textContent = "Track order";
     }
+  }
+
+  trackForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await trackOrder();
   });
+
+  restoreOrderButton.addEventListener("click", () => fillSavedOrder(true));
+
+  // Restore and refresh the last saved order automatically on this device.
+  const savedOrderOnLoad = readSavedOrder();
+  if (savedOrderOnLoad) {
+    restoreOrderButton.hidden = false;
+    fillSavedOrder(true);
+  }
 
   document.getElementById("saveOrderChanges").addEventListener("click", async () => {
     const saveButton = document.getElementById("saveOrderChanges");
