@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1fb">
+  <meta name="description" content="Submit your Swiper order details securely.">
+  <title>Swiper — Redeem an Order</title>
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    :root{color-scheme:light;--ink:#202124;--muted:#5f6368;--purple:#673ab7;--line:#dadce0;--bg:#f4f1fb;--card:#fff}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh;padding:34px 16px 60px}
+    .shell{width:min(100%,650px);margin:0 auto}
+    .banner{height:11px;background:linear-gradient(90deg,#5b35a5,#8d6acb);border-radius:12px 12px 0 0}
+    .card{background:var(--card);border:1px solid #e1dce9;border-radius:12px;box-shadow:0 2px 7px #30234a0b;margin-bottom:12px;overflow:hidden}
+    .intro{padding:27px 28px 23px;border-top:0}
+    .eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--purple);text-transform:uppercase}
+    h1{font:600 clamp(27px,6vw,36px)/1.15 Fredoka,Inter,sans-serif;margin:10px 0 9px}
+    .intro p{color:var(--muted);line-height:1.6;margin:0;font-size:14px}
+    .required-note{font-size:12px!important;color:#b3261e!important;margin-top:18px!important}
+    form{display:grid;gap:12px}
+    .field{padding:21px 24px}
+    label{display:block;font-size:15px;font-weight:600;margin-bottom:13px}
+    .required{color:#d93025}
+    input{width:100%;border:0;border-bottom:1px solid #bfc4ca;border-radius:0;padding:11px 2px;font:15px Inter,Arial,sans-serif;outline:none;background:transparent;color:var(--ink)}
+    input:focus{border-bottom:2px solid var(--purple)}
+    input::placeholder{color:#9aa0a6}
+    .hint{font-size:12px;color:var(--muted);margin:9px 0 0}
+    .captcha{padding:19px 24px}
+    .captcha label{margin-bottom:12px}
+    .turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}
+    .captcha-help{font-size:12px;color:#8a4b08;margin:9px 0 0;line-height:1.5}
+    .actions{display:flex;align-items:center;gap:16px;padding:8px 2px 0}
+    button{border:0;border-radius:6px;background:var(--purple);color:#fff;font:600 14px Inter,Arial,sans-serif;padding:12px 24px;cursor:pointer;box-shadow:0 2px 4px #00000020;transition:filter .15s,transform .15s}
+    button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .status{font-size:13px;line-height:1.5;color:var(--muted);min-height:20px}
+    .status.success{color:#137333}.status.error{color:#b3261e}
+    .privacy{color:#68636f;text-align:center;font-size:12px;line-height:1.6;padding:18px 12px}
+    .privacy strong{color:#514b5a}
+    .brand{font:600 14px Fredoka,sans-serif;letter-spacing:.08em;color:#756b82;text-align:center;margin-top:24px}
+    .cooldown{font-variant-numeric:tabular-nums;font-weight:700}
+    @media(max-width:480px){body{padding:18px 10px 40px}.intro{padding:23px 20px}.field,.captcha{padding:19px 20px}.actions{align-items:flex-start;flex-direction:column;gap:10px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="card">
+      <div class="banner"></div>
+      <header class="intro">
+        <div class="eyebrow">SWIPER ORDER CENTER</div>
+        <h1>Redeem an order</h1>
+        <p>Complete this form with the details from your order. Your response is sent privately to the Swiper team for review.</p>
+        <p class="required-note">* Indicates a required question</p>
+      </header>
+    </div>
+
+    <form id="redeemForm" novalidate>
+      <section class="card field">
+        <label for="orderEmail">Order Email <span class="required">*</span></label>
+        <input id="orderEmail" name="orderEmail" type="email" autocomplete="email" maxlength="254" placeholder="Your order email" required>
+        <p class="hint">Use the email address associated with your order.</p>
+      </section>
+      <section class="card field">
+        <label for="orderName">Order Name <span class="required">*</span></label>
+        <input id="orderName" name="orderName" type="text" autocomplete="name" maxlength="120" placeholder="Name on the order" required>
+      </section>
+      <section class="card field">
+        <label for="orderType">Order Type <span class="required">*</span></label>
+        <input id="orderType" name="orderType" type="text" maxlength="80" placeholder="What type of order are you redeeming?" required>
+      </section>
+      <section class="card captcha">
+        <label>CAPTCHA verification <span class="required">*</span></label>
+        <div class="turnstile-wrap">
+          <div class="cf-turnstile" data-sitekey="YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY" data-action="redeem_submit" data-theme="light"></div>
+        </div>
+        <p class="captcha-help" id="captchaHelp">CAPTCHA setup is required before submissions can be accepted.</p>
+      </section>
+      <div class="actions">
+        <button id="submitButton" type="submit" disabled>Submit</button>
+        <div class="status" id="formStatus" role="status" aria-live="polite">Complete the CAPTCHA to enable submission.</div>
+      </div>
+    </form>
+
+    <p class="privacy"><strong>Your response is private.</strong> Other visitors cannot view submissions. Only authorized project administrators can review them in the Supabase dashboard.</p>
+    <div class="brand">SWIPER</div>
+  </main>
+
+<script>
+(() => {
+  const SUPABASE_FUNCTION = "https://upghyzhawctughyojwpo.supabase.co/functions/v1/redeem-submit";
+  const SITE_KEY = "YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY";
+  const form = document.getElementById("redeemForm");
+  const button = document.getElementById("submitButton");
+  const status = document.getElementById("formStatus");
+  const captchaHelp = document.getElementById("captchaHelp");
+  let token = "";
+  let cooldownUntil = 0;
+  let cooldownTimer = null;
+
+  const captchaReady = SITE_KEY !== "YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY";
+  if (captchaReady) {
+    document.querySelector(".cf-turnstile").dataset.sitekey = SITE_KEY;
+    captchaHelp.textContent = "Complete the check above to verify you're human.";
+  } else {
+    document.querySelector(".cf-turnstile").remove();
+    captchaHelp.textContent = "The CAPTCHA site key has not been configured yet. Add your Cloudflare Turnstile site key to index.html to enable submissions.";
+    status.textContent = "CAPTCHA setup is pending.";
+  }
+
+  function setStatus(message, type = "") {
+    status.textContent = message;
+    status.className = "status " + type;
+  }
+
+  function updateButton() {
+    const cooling = Date.now() < cooldownUntil;
+    button.disabled = !captchaReady || !token || cooling;
+    if (cooling) {
+      const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setStatus("You can submit again in " + seconds + " seconds.", "error");
+    }
+  }
+
+  function startCooldown(seconds = 30) {
+    cooldownUntil = Date.now() + seconds * 1000;
+    clearInterval(cooldownTimer);
+    updateButton();
+    cooldownTimer = setInterval(() => {
+      if (Date.now() >= cooldownUntil) {
+        clearInterval(cooldownTimer);
+        setStatus("You can submit another response now.");
+        updateButton();
+      } else updateButton();
+    }, 250);
+  }
+
+  window.onTurnstileSuccess = (value) => {
+    token = value;
+    setStatus("CAPTCHA verified. You're ready to submit.");
+    updateButton();
+  };
+  window.onTurnstileExpired = () => {
+    token = "";
+    setStatus("CAPTCHA expired. Please verify again.", "error");
+    updateButton();
+  };
+  window.onTurnstileError = () => {
+    token = "";
+    setStatus("CAPTCHA could not load. Refresh the page and try again.", "error");
+    updateButton();
+  };
+
+  if (captchaReady) {
+    const widget = document.querySelector(".cf-turnstile");
+    widget.setAttribute("data-callback", "onTurnstileSuccess");
+    widget.setAttribute("data-expired-callback", "onTurnstileExpired");
+    widget.setAttribute("data-error-callback", "onTurnstileError");
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!captchaReady || !token || Date.now() < cooldownUntil) return;
+    const orderEmail = document.getElementById("orderEmail").value.trim();
+    const orderName = document.getElementById("orderName").value.trim();
+    const orderType = document.getElementById("orderType").value.trim();
+    if (!form.reportValidity()) return;
+
+    button.disabled = true;
+    setStatus("Submitting securely…");
+    try {
+      const response = await fetch(SUPABASE_FUNCTION, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderEmail, orderName, orderType, token })
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 429) startCooldown(30);
+        else {
+          setStatus(result.error || "Submission failed. Please try again.", "error");
+          if (window.turnstile) window.turnstile.reset();
+          token = "";
+          updateButton();
+        }
+        return;
+      }
+      form.reset();
+      if (window.turnstile) window.turnstile.reset();
+      token = "";
+      startCooldown(30);
+      setStatus("Your response was submitted successfully. Thank you!", "success");
+    } catch {
+      setStatus("Connection error. Check your internet connection and try again.", "error");
+      if (window.turnstile) window.turnstile.reset();
+      token = "";
+      updateButton();
+    }
+  });
+})();
+</script>
+</body>
+</html>
