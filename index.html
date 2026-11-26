@@ -58,6 +58,29 @@ button:disabled{opacity:.42;cursor:not-allowed}
 @keyframes fade-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){body{padding:24px 13px 40px}.intro{padding:29px 22px}.field,.captcha{padding:19px}.actions{align-items:stretch;flex-direction:column;gap:10px}button{width:100%}.status{padding:0 2px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+
+.order-tools{margin:30px 0 0;padding:25px;background:#fff;border:1px solid #dedede;border-radius:12px;animation:fade-in .35s ease both}
+.order-tools h2{font:600 27px/1.2 Fredoka,Inter,sans-serif;margin:0 0 9px;color:#242424}
+.order-tools>p{font-size:13px;color:#737373;line-height:1.6;margin:0 0 19px}
+.order-tools form{display:grid;gap:12px}
+.order-tools label{margin-bottom:8px}
+.order-tools input{border-radius:7px}
+.order-tools button{border-radius:8px}
+.order-tools .secondary-button{background:#eee;color:#333;border-color:#ddd}
+.order-tools .secondary-button:hover:not(:disabled){background:#ddd;border-color:#ccc}
+.order-tools .danger-button{background:#fff;color:#a33;border-color:#d8bcbc}
+.order-tools .danger-button:hover:not(:disabled){background:#f7eeee;border-color:#c99}
+.order-tools .credential{background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:15px;margin-top:16px;overflow-wrap:anywhere}
+.order-tools .credential code{display:block;font-size:12px;line-height:1.6;margin:8px 0;color:#333;user-select:all}
+.order-tools .credential small{color:#666;line-height:1.5}
+.order-tools .manage-status{padding:13px 14px;border-radius:8px;background:#f3f3f3;color:#444;font-size:13px;line-height:1.6;margin:15px 0}
+.order-tools .manage-status.locked{background:#eee;color:#333}
+.order-tools .manage-status.cancelled{background:#f5eeee;color:#8b4141}
+.order-tools .manage-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+.order-tools .manage-actions button{width:auto}
+.order-tools [hidden]{display:none!important}
+@media(max-width:520px){.order-tools{padding:20px}.order-tools .manage-actions{flex-direction:column}.order-tools .manage-actions button{width:100%}}
+
 </style>
 </head>
 <body>
@@ -118,6 +141,56 @@ button:disabled{opacity:.42;cursor:not-allowed}
       </div>
     </form>
 
+
+    <section class="order-tools" aria-labelledby="trackHeading">
+      <h2 id="trackHeading">Track your order</h2>
+      <p>Already submitted an order? Enter the order ID and private management code you received after submitting to view its status, edit it, or cancel it while it is still pending.</p>
+      <form id="trackForm" novalidate>
+        <div>
+          <label for="manageOrderId">Order ID</label>
+          <input id="manageOrderId" autocomplete="off" spellcheck="false" placeholder="Paste your order ID" required>
+        </div>
+        <div>
+          <label for="manageAccessCode">Private management code</label>
+          <input id="manageAccessCode" autocomplete="off" spellcheck="false" placeholder="Paste your private code" required>
+        </div>
+        <button id="trackButton" type="submit">Track order</button>
+      </form>
+      <div class="credential" id="newOrderCredentials" hidden>
+        <strong>Your order was submitted!</strong>
+        <small>Save both details below. Your private management code is shown only once and cannot be recovered if you lose it.</small>
+        <code id="newOrderId"></code>
+        <button class="secondary-button" id="copyOrderId" type="button">Copy order ID</button>
+        <code id="newOrderCode"></code>
+        <button class="secondary-button" id="copyOrderCode" type="button">Copy management code</button>
+      </div>
+      <div id="manageDetails" hidden>
+        <div id="manageStatus" class="manage-status" role="status" aria-live="polite"></div>
+        <div id="manageEditFields">
+          <div style="margin-bottom:12px">
+            <label for="manageEmail">Order Email</label>
+            <input id="manageEmail" type="email" maxlength="254">
+          </div>
+          <div style="margin-bottom:12px">
+            <label for="manageName">Order Name</label>
+            <input id="manageName" maxlength="120">
+          </div>
+          <div style="margin-bottom:12px">
+            <label for="manageType">Order Type</label>
+            <input id="manageType" maxlength="80">
+          </div>
+          <div>
+            <label for="manageTarget">Target User</label>
+            <input id="manageTarget" maxlength="20" autocapitalize="none" spellcheck="false">
+          </div>
+        </div>
+        <div class="manage-actions" id="manageActions" hidden>
+          <button id="saveOrderChanges" type="button">Save changes</button>
+          <button id="cancelOrder" class="danger-button" type="button">Cancel order</button>
+        </div>
+      </div>
+    </section>
+
     <p class="privacy"><strong>Your response is private.</strong> Other visitors cannot view submissions.</p>
     <div class="brand">SWIPER</div>
   </main>
@@ -137,6 +210,113 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const confirmQuestion = document.getElementById("confirmQuestion");
   const confirmHint = document.getElementById("confirmHint");
   const finalCheck = document.getElementById("finalCheck");
+
+  const trackForm = document.getElementById("trackForm");
+  const trackButton = document.getElementById("trackButton");
+  const manageDetails = document.getElementById("manageDetails");
+  const manageStatus = document.getElementById("manageStatus");
+  const manageActions = document.getElementById("manageActions");
+  const manageEditFields = document.getElementById("manageEditFields");
+  let activeOrder = null;
+
+  function setOrderCredentials(id, code) {
+    document.getElementById("newOrderId").textContent = id;
+    document.getElementById("newOrderCode").textContent = code;
+    document.getElementById("newOrderCredentials").hidden = false;
+    document.getElementById("manageOrderId").value = id;
+    document.getElementById("manageAccessCode").value = code;
+  }
+
+  async function manageOrder(action, values = {}) {
+    const submissionId = document.getElementById("manageOrderId").value.trim();
+    const accessCode = document.getElementById("manageAccessCode").value.trim();
+    const response = await fetch(SUPABASE_FUNCTION, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, submissionId, accessCode, ...values })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Order request failed.");
+    return result;
+  }
+
+  function renderManagedOrder(order) {
+    activeOrder = order;
+    manageDetails.hidden = false;
+    manageStatus.className = "manage-status" + (order.status === 2 ? " locked" : order.status === 3 ? " cancelled" : "");
+    manageStatus.textContent = order.message || "Order status updated.";
+    document.getElementById("manageEmail").value = order.orderEmail || "";
+    document.getElementById("manageName").value = order.orderName || "";
+    document.getElementById("manageType").value = order.orderType || "";
+    document.getElementById("manageTarget").value = order.targetUser || "";
+    const editable = order.status === 1 && order.editable;
+    manageActions.hidden = !editable;
+    manageEditFields.hidden = !editable;
+    if (order.status === 2 || order.status === 3) {
+      manageEditFields.hidden = true;
+      manageActions.hidden = true;
+    }
+  }
+
+  trackForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    trackButton.disabled = true;
+    trackButton.textContent = "Looking up…";
+    try {
+      const order = await manageOrder("track");
+      renderManagedOrder(order);
+    } catch (error) {
+      manageDetails.hidden = false;
+      manageActions.hidden = true;
+      manageEditFields.hidden = true;
+      manageStatus.className = "manage-status";
+      manageStatus.textContent = error.message;
+    } finally {
+      trackButton.disabled = false;
+      trackButton.textContent = "Track order";
+    }
+  });
+
+  document.getElementById("saveOrderChanges").addEventListener("click", async () => {
+    const saveButton = document.getElementById("saveOrderChanges");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving…";
+    try {
+      const order = await manageOrder("edit", {
+        orderEmail: document.getElementById("manageEmail").value.trim(),
+        orderName: document.getElementById("manageName").value.trim(),
+        orderType: document.getElementById("manageType").value.trim(),
+        targetUser: document.getElementById("manageTarget").value.trim()
+      });
+      renderManagedOrder(order);
+    } catch (error) {
+      manageStatus.className = "manage-status";
+      manageStatus.textContent = error.message;
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save changes";
+    }
+  });
+
+  document.getElementById("cancelOrder").addEventListener("click", async () => {
+    if (!window.confirm("Cancel this order? This cannot be undone.")) return;
+    const cancelButton = document.getElementById("cancelOrder");
+    cancelButton.disabled = true;
+    try {
+      const order = await manageOrder("cancel");
+      renderManagedOrder(order);
+    } catch (error) {
+      manageStatus.textContent = error.message;
+    } finally {
+      cancelButton.disabled = false;
+    }
+  });
+
+  document.getElementById("copyOrderId").addEventListener("click", () =>
+    navigator.clipboard?.writeText(document.getElementById("newOrderId").textContent));
+  document.getElementById("copyOrderCode").addEventListener("click", () =>
+    navigator.clipboard?.writeText(document.getElementById("newOrderCode").textContent));
+
   let token = "";
   let cooldownUntil = 0;
   let cooldownTimer = null;
@@ -268,6 +448,10 @@ button:disabled{opacity:.42;cursor:not-allowed}
       token = "";
       startCooldown(30);
       setStatus("Verified Swiper user @" + (result.targetUser || targetUser) + " — your response was submitted!", "success");
+      if (result.submissionId && result.managementCode) {
+        setOrderCredentials(result.submissionId, result.managementCode);
+        document.getElementById("newOrderCredentials").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     } catch {
       setStatus("Connection error. Check your internet connection and try again.", "error");
       if (window.turnstile) window.turnstile.reset();
