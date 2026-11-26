@@ -3,48 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b0e13">
+  <meta name="theme-color" content="#f5f1e8">
   <meta name="description" content="Submit your Swiper order details securely.">
   <title>Swiper — Redeem an Order</title>
   <link rel="preconnect" href="https://challenges.cloudflare.com">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
   <style>
-    :root{color-scheme:dark;--ink:#f4f6fa;--muted:#9ba6b5;--blue:#4c9cff;--line:#293443;--bg:#0b0e13;--card:#121821;--field:#0d131b}
+    :root{color-scheme:light;--ink:#172a25;--muted:#718078;--green:#174b3d;--green-deep:#10392f;--orange:#f07845;--line:#e7e0d4;--bg:#f5f1e8;--card:#fffdf8;--field:#faf8f2}
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(ellipse at 50% -15%,#172638 0%,#0b0e13 55%);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh;padding:48px 18px 64px}
-    .shell{width:min(100%,680px);margin:0 auto}
-    .card{background:linear-gradient(145deg,#151d28,#111720);border:1px solid var(--line);border-radius:17px;box-shadow:0 12px 34px #0003;margin-bottom:14px;overflow:hidden}
-    .intro{padding:30px 30px 27px;position:relative}
-    .intro:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,#3688e8,#73b8ff 55%,#314f72)}
-    .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:10px;font-weight:800;letter-spacing:.17em;color:#82baff;text-transform:uppercase}
-    .eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:#58a5ff;box-shadow:0 0 12px #58a5ff88}
-    h1{font:600 clamp(29px,6vw,39px)/1.12 Fredoka,Inter,sans-serif;letter-spacing:-.02em;margin:13px 0 10px}
-    .intro p{color:var(--muted);line-height:1.7;margin:0;font-size:14px;max-width:540px}
-    .required-note{font-size:12px!important;color:#8794a5!important;margin-top:19px!important}
-    form{display:grid;gap:13px}
-    .field{padding:22px 25px}
-    label{display:block;font-size:14px;font-weight:650;margin-bottom:12px;color:#e8edf5}
-    .required{color:#70b2ff;margin-left:3px}
-    input{width:100%;border:1px solid #303d4d;border-radius:10px;padding:13px 14px;font:14px Inter,Arial,sans-serif;outline:none;background:var(--field);color:var(--ink);transition:border-color .18s,box-shadow .18s}
-    input:focus{border-color:#4c9cff;box-shadow:0 0 0 3px #4c9cff20}
-    input::placeholder{color:#697789}
-    .hint{font-size:12px;color:#8491a1;margin:9px 0 0;line-height:1.5}
-    .captcha{padding:21px 25px}
-    .captcha label{margin-bottom:13px}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh;padding:54px 20px 70px}
+    body:before{content:"";position:fixed;z-index:-1;inset:0 0 auto;height:8px;background:linear-gradient(90deg,var(--green) 0 72%,var(--orange) 72% 100%)}
+    .shell{width:min(100%,720px);margin:0 auto}
+    .shell>.card:first-child{background:var(--green);border:0;border-radius:24px;box-shadow:0 18px 40px #183c3020;margin-bottom:24px;overflow:hidden;position:relative}
+    .shell>.card:first-child:after{content:"";position:absolute;width:240px;height:240px;border:38px solid #ffffff0d;border-radius:50%;right:-82px;top:-112px;pointer-events:none}
+    .banner{display:none}
+    .intro{padding:38px 38px 35px;position:relative;z-index:1}
+    .eyebrow{display:inline-flex;align-items:center;gap:9px;background:#ffffff14;border:1px solid #ffffff25;border-radius:999px;padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:.15em;color:#d6e8dd;text-transform:uppercase}
+    .eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px #f0784525}
+    h1{font:600 clamp(34px,7vw,48px)/1.06 Fredoka,Inter,sans-serif;letter-spacing:-.035em;color:#fff;margin:22px 0 13px;max-width:520px}
+    .intro p{color:#d2e0d8;line-height:1.75;margin:0;font-size:14px;max-width:520px}
+    .required-note{font-size:12px!important;color:#a9c6b7!important;margin-top:22px!important}
+    form{display:grid;gap:14px}
+    .field,.captcha{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:0 5px 18px #453c2b08;margin:0;position:relative}
+    .field{padding:24px 27px}
+    label{display:block;font-size:14px;font-weight:700;margin-bottom:13px;color:#263b33}
+    .required{color:var(--orange);margin-left:3px}
+    input{width:100%;border:1px solid #dedfd5;border-radius:11px;padding:15px 16px;font:14px Inter,Arial,sans-serif;outline:none;background:var(--field);color:var(--ink);transition:border-color .18s,box-shadow .18s,background .18s}
+    input:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 4px #174b3d12}
+    input::placeholder{color:#9aa39c}
+    .hint{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.55}
+    .captcha{padding:23px 27px}
+    .captcha label{margin-bottom:14px}
     .turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}
-    .captcha-help{font-size:12px;color:#91a0b2;margin:9px 0 0;line-height:1.5}
-    .actions{display:flex;align-items:center;gap:16px;padding:5px 2px 0}
-    button{border:1px solid #5ca5f7;border-radius:10px;background:linear-gradient(180deg,#388de9,#2473ce);color:#fff;font:650 14px Inter,Arial,sans-serif;padding:13px 28px;cursor:pointer;box-shadow:0 5px 18px #2473ce35;transition:filter .15s,transform .15s,box-shadow .15s}
-    button:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 8px 22px #2473ce45}
-    button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
-    .status{font-size:13px;line-height:1.5;color:#9ba6b5;min-height:20px}
-    .status.success{color:#78d6a0}.status.error{color:#ff9292}
-    .privacy{color:#8390a0;text-align:center;font-size:12px;line-height:1.7;padding:16px 12px;max-width:580px;margin:4px auto 0}
-    .privacy strong{color:#cbd5e2}
-    .brand{font:600 13px Fredoka,sans-serif;letter-spacing:.18em;color:#68778a;text-align:center;margin-top:25px}
+    .captcha-help{font-size:12px;color:#78877e;margin:9px 0 0;line-height:1.5}
+    .actions{display:flex;align-items:center;gap:18px;padding:7px 2px 0}
+    button{border:0;border-radius:11px;background:var(--orange);color:#fff;font:700 14px Inter,Arial,sans-serif;padding:15px 30px;cursor:pointer;box-shadow:0 7px 18px #c75d3325;transition:filter .15s,transform .15s,box-shadow .15s}
+    button:hover:not(:disabled){filter:brightness(1.04);transform:translateY(-2px);box-shadow:0 10px 22px #c75d3330}
+    button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
+    .status{font-size:13px;line-height:1.5;color:#718078;min-height:20px}
+    .status.success{color:#16734b}.status.error{color:#b84335}
+    .privacy{color:#7b857e;text-align:center;font-size:12px;line-height:1.75;padding:19px 16px;max-width:590px;margin:7px auto 0}
+    .privacy strong{color:#31483d}
+    .brand{font:600 12px Fredoka,sans-serif;letter-spacing:.22em;color:#8c968c;text-align:center;margin-top:20px}
     .cooldown{font-variant-numeric:tabular-nums;font-weight:700}
-    @media(max-width:520px){body{padding:22px 12px 42px}.intro{padding:25px 21px 22px}.field,.captcha{padding:19px 20px}.actions{align-items:flex-start;flex-direction:column;gap:11px}button{width:100%}}
+    @media(max-width:520px){body{padding:30px 13px 44px}.shell>.card:first-child{border-radius:18px;margin-bottom:17px}.intro{padding:29px 23px 27px}.field,.captcha{padding:20px}.actions{align-items:stretch;flex-direction:column;gap:11px}button{width:100%}.status{padding:0 2px}}
   </style>
 </head>
 <body>
@@ -76,7 +79,7 @@
       <section class="card captcha">
         <label>CAPTCHA verification <span class="required">*</span></label>
         <div class="turnstile-wrap">
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAAF9cX8702IwLD8nj" data-action="redeem_submit" data-theme="dark"></div>
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAF9cX8702IwLD8nj" data-action="redeem_submit" data-theme="light"></div>
         </div>
         <p class="captcha-help" id="captchaHelp">CAPTCHA setup is required before submissions can be accepted.</p>
       </section>
