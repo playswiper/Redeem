@@ -239,9 +239,16 @@ button:disabled{opacity:.42;cursor:not-allowed}
 
   function readSavedOrders() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(SAVED_ORDER_KEY) || "[]");
+      const parsed = JSON.parse(localStorage.getItem(SAVED_ORDER_KEY) || "null");
       if (Array.isArray(parsed)) return parsed.filter(item => item && typeof item.id === "string" && typeof item.code === "string");
       if (parsed && typeof parsed.id === "string" && typeof parsed.code === "string") return [parsed];
+      // Keep the previously saved single order when upgrading to the multi-order list.
+      const legacy = JSON.parse(localStorage.getItem("swiper_redeem_saved_order_v1") || "null");
+      if (legacy && typeof legacy.id === "string" && typeof legacy.code === "string") {
+        const migrated = [legacy];
+        localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
       return [];
     } catch { return []; }
   }
