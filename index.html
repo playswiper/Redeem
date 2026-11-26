@@ -37,7 +37,17 @@ label{display:block;font-size:14px;font-weight:700;margin-bottom:13px;color:#f2e
 input{width:100%;border:1px solid #42375e;border-radius:12px;padding:15px 16px;font:14px Inter,Arial,sans-serif;outline:none;background:var(--field);color:var(--ink);transition:border-color .18s,box-shadow .18s,background .18s}
 input:focus{border-color:var(--purple);background:#1c1730;box-shadow:0 0 0 4px #9b78ff20,0 0 24px #9b78ff10}input::placeholder{color:#77708e}
 .hint{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.55}
-.captcha{padding:23px 27px}.captcha label{margin-bottom:14px}.turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}.captcha-help{font-size:12px;color:#aaa2c5;margin:9px 0 0;line-height:1.5}
+.captcha{padding:23px 27px}.captcha label{margin-bottom:14px}
+.final-check{border-color:#7761a8;background:linear-gradient(135deg,#30264b,#211a37);transition:opacity .2s,border-color .2s,box-shadow .2s}
+.final-check.is-ready{border-color:#c8ff70;box-shadow:0 0 0 1px #c8ff7030,0 14px 36px #05030d45}
+.confirm-kicker{font-size:10px;letter-spacing:.18em;font-weight:800;color:var(--lime);margin-bottom:12px}
+.confirm-question{font:600 23px/1.25 Fredoka,Inter,sans-serif;color:#fff;margin:0 0 17px;overflow-wrap:anywhere}
+.confirm-label{display:flex;align-items:center;gap:11px;font-size:13px!important;margin:0!important;cursor:pointer}
+.confirm-label input{appearance:none;flex:0 0 20px;width:20px;height:20px;margin:0;padding:0;border:1px solid #746493;border-radius:6px;background:#151127;cursor:pointer}
+.confirm-label input:checked{background:var(--lime);border-color:var(--lime)}
+.confirm-label input:checked:after{content:"✓";display:block;color:#1b2030;text-align:center;font-weight:900;line-height:18px}
+.final-check:not(.is-ready) .confirm-label{opacity:.45;pointer-events:none}
+.turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}.captcha-help{font-size:12px;color:#aaa2c5;margin:9px 0 0;line-height:1.5}
 .actions{display:flex;align-items:center;gap:18px;padding:7px 2px 0}
 button{border:0;border-radius:13px;background:linear-gradient(100deg,var(--lime),#a9f5a0,var(--lime));background-size:200% 100%;color:#1b2030;font:800 14px Inter,Arial,sans-serif;padding:16px 31px;cursor:pointer;box-shadow:0 8px 25px #b9ff6d25;transition:filter .15s,transform .15s,box-shadow .15s}
 button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-3px) scale(1.015);box-shadow:0 13px 32px #b9ff6d35;animation:shimmer 2s linear infinite}button:active:not(:disabled){transform:translateY(0) scale(.985)}button:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
@@ -79,12 +89,26 @@ button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-3px) s
         <input id="targetUser" name="targetUser" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="Swiper username (without @)" required>
         <p class="hint">Who should receive this order? We'll check that this username belongs to an existing Swiper account before accepting the form.</p>
       </section>
+      <section class="card field">
+        <label for="targetUserAgain">Re-enter Target User <span class="required">*</span></label>
+        <input id="targetUserAgain" name="targetUserAgain" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="Enter the exact same Swiper username again" required>
+        <p class="hint" id="targetMatchHint">Enter the username a second time to catch typing mistakes.</p>
+      </section>
       <section class="card captcha">
         <label>CAPTCHA verification <span class="required">*</span></label>
         <div class="turnstile-wrap">
           <div class="cf-turnstile" data-sitekey="0x4AAAAAAF9cX8702IwLD8nj" data-action="redeem_submit" data-theme="light"></div>
         </div>
         <p class="captcha-help" id="captchaHelp">CAPTCHA setup is required before submissions can be accepted.</p>
+      </section>
+      <section class="card field final-check" id="finalCheck">
+        <div class="confirm-kicker">FINAL CHECK</div>
+        <p class="confirm-question" id="confirmQuestion">Are you sure the target user is correct?</p>
+        <label class="confirm-label" for="confirmTarget">
+          <input id="confirmTarget" type="checkbox" required>
+          <span>Yes, this is the correct user.</span>
+        </label>
+        <p class="hint" id="confirmHint">Enter the target username twice above. This confirmation becomes available when both entries match.</p>
       </section>
       <div class="actions">
         <button id="submitButton" type="submit" disabled>Submit</button>
@@ -104,6 +128,13 @@ button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-3px) s
   const button = document.getElementById("submitButton");
   const status = document.getElementById("formStatus");
   const captchaHelp = document.getElementById("captchaHelp");
+  const targetUserInput = document.getElementById("targetUser");
+  const targetUserAgainInput = document.getElementById("targetUserAgain");
+  const targetMatchHint = document.getElementById("targetMatchHint");
+  const confirmTarget = document.getElementById("confirmTarget");
+  const confirmQuestion = document.getElementById("confirmQuestion");
+  const confirmHint = document.getElementById("confirmHint");
+  const finalCheck = document.getElementById("finalCheck");
   let token = "";
   let cooldownUntil = 0;
   let cooldownTimer = null;
@@ -122,6 +153,40 @@ button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-3px) s
     status.textContent = message;
     status.className = "status " + type;
   }
+
+  function normalizedUser(value) {
+    return value.trim().replace(/^@+/, "").toLowerCase();
+  }
+
+  function updateTargetConfirmation() {
+    const first = targetUserInput.value.trim().replace(/^@+/, "");
+    const second = targetUserAgainInput.value.trim().replace(/^@+/, "");
+    const bothEntered = first.length > 0 && second.length > 0;
+    const matches = bothEntered && normalizedUser(first) === normalizedUser(second);
+    const validName = /^[a-zA-Z0-9_]{2,20}$/.test(first);
+    targetMatchHint.textContent = !bothEntered
+      ? "Enter the username a second time to catch typing mistakes."
+      : !matches
+        ? "These usernames do not match yet. Check the spelling and try again."
+        : !validName
+          ? "Use a valid Swiper username (2–20 letters, numbers, or underscores)."
+          : "Both entries match. One last confirmation below!";
+    targetMatchHint.style.color = bothEntered && !matches ? "#ff91a8" : "";
+    confirmQuestion.textContent = first
+      ? "Are you sure @" + first + " is the right user?"
+      : "Are you sure the target user is correct?";
+    finalCheck.classList.toggle("is-ready", matches && validName);
+    confirmTarget.disabled = !(matches && validName);
+    if (!matches || !validName) confirmTarget.checked = false;
+    confirmHint.textContent = matches && validName
+      ? "Double-check the username above before confirming."
+      : "This confirmation unlocks after both username entries match.";
+    return matches && validName && confirmTarget.checked;
+  }
+
+  targetUserInput.addEventListener("input", updateTargetConfirmation);
+  targetUserAgainInput.addEventListener("input", updateTargetConfirmation);
+  confirmTarget.addEventListener("change", updateTargetConfirmation);
 
   function updateButton() {
     const cooling = Date.now() < cooldownUntil;
