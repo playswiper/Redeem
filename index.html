@@ -257,7 +257,10 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const orders = readSavedOrders();
     savedOrdersElement.replaceChildren();
     if (!orders.length) {
-      savedOrdersElement.innerHTML = '<div class="empty-orders">No orders saved on this device yet. Use “Redeem another code” to track an order.</div>';
+      const empty = document.createElement("div");
+      empty.className = "empty-orders";
+      empty.textContent = "No orders found.";
+      savedOrdersElement.append(empty);
       return;
     }
     orders.forEach((order, index) => {
@@ -372,8 +375,6 @@ button:disabled{opacity:.42;cursor:not-allowed}
     event.preventDefault();
     await trackOrder();
   });
-
-  restoreOrderButton.addEventListener("click", () => fillSavedOrder(true));
 
   // Show saved orders on arrival without autofilling or contacting the server.
   renderSavedOrders();
