@@ -10,45 +10,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
   <style>
-    :root{color-scheme:light;--ink:#172a25;--muted:#718078;--green:#174b3d;--green-deep:#10392f;--orange:#f07845;--line:#e7e0d4;--bg:#f5f1e8;--card:#fffdf8;--field:#faf8f2}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh;padding:54px 20px 70px}
-    body:before{content:"";position:fixed;z-index:-1;inset:0 0 auto;height:8px;background:linear-gradient(90deg,var(--green) 0 72%,var(--orange) 72% 100%)}
-    .shell{width:min(100%,720px);margin:0 auto}
-    .shell>.card:first-child{background:var(--green);border:0;border-radius:24px;box-shadow:0 18px 40px #183c3020;margin-bottom:24px;overflow:hidden;position:relative}
-    .shell>.card:first-child:after{content:"";position:absolute;width:240px;height:240px;border:38px solid #ffffff0d;border-radius:50%;right:-82px;top:-112px;pointer-events:none}
-    .banner{display:none}
-    .intro{padding:38px 38px 35px;position:relative;z-index:1}
-    .eyebrow{display:inline-flex;align-items:center;gap:9px;background:#ffffff14;border:1px solid #ffffff25;border-radius:999px;padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:.15em;color:#d6e8dd;text-transform:uppercase}
-    .eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px #f0784525}
-    h1{font:600 clamp(34px,7vw,48px)/1.06 Fredoka,Inter,sans-serif;letter-spacing:-.035em;color:#fff;margin:22px 0 13px;max-width:520px}
-    .intro p{color:#d2e0d8;line-height:1.75;margin:0;font-size:14px;max-width:520px}
-    .required-note{font-size:12px!important;color:#a9c6b7!important;margin-top:22px!important}
-    form{display:grid;gap:14px}
-    .field,.captcha{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:0 5px 18px #453c2b08;margin:0;position:relative}
-    .field{padding:24px 27px}
-    label{display:block;font-size:14px;font-weight:700;margin-bottom:13px;color:#263b33}
-    .required{color:var(--orange);margin-left:3px}
-    input{width:100%;border:1px solid #dedfd5;border-radius:11px;padding:15px 16px;font:14px Inter,Arial,sans-serif;outline:none;background:var(--field);color:var(--ink);transition:border-color .18s,box-shadow .18s,background .18s}
-    input:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 4px #174b3d12}
-    input::placeholder{color:#9aa39c}
-    .hint{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.55}
-    .captcha{padding:23px 27px}
-    .captcha label{margin-bottom:14px}
-    .turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}
-    .captcha-help{font-size:12px;color:#78877e;margin:9px 0 0;line-height:1.5}
-    .actions{display:flex;align-items:center;gap:18px;padding:7px 2px 0}
-    button{border:0;border-radius:11px;background:var(--orange);color:#fff;font:700 14px Inter,Arial,sans-serif;padding:15px 30px;cursor:pointer;box-shadow:0 7px 18px #c75d3325;transition:filter .15s,transform .15s,box-shadow .15s}
-    button:hover:not(:disabled){filter:brightness(1.04);transform:translateY(-2px);box-shadow:0 10px 22px #c75d3330}
-    button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
-    .status{font-size:13px;line-height:1.5;color:#718078;min-height:20px}
-    .status.success{color:#16734b}.status.error{color:#b84335}
-    .privacy{color:#7b857e;text-align:center;font-size:12px;line-height:1.75;padding:19px 16px;max-width:590px;margin:7px auto 0}
-    .privacy strong{color:#31483d}
-    .brand{font:600 12px Fredoka,sans-serif;letter-spacing:.22em;color:#8c968c;text-align:center;margin-top:20px}
-    .cooldown{font-variant-numeric:tabular-nums;font-weight:700}
-    @media(max-width:520px){body{padding:30px 13px 44px}.shell>.card:first-child{border-radius:18px;margin-bottom:17px}.intro{padding:29px 23px 27px}.field,.captcha{padding:20px}.actions{align-items:stretch;flex-direction:column;gap:11px}button{width:100%}.status{padding:0 2px}}
-  </style>
+:root{color-scheme:dark;--bg:#100d20;--panel:#1b1730;--ink:#f8f5ff;--muted:#aaa2c5;--line:#393052;--purple:#9b78ff;--pink:#ff70bd;--lime:#c8ff70;--field:#151127}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;padding:48px 18px 64px;background:radial-gradient(ellipse at 12% 8%,#543b8a55,transparent 34%),radial-gradient(ellipse at 92% 28%,#9b367444,transparent 30%),linear-gradient(145deg,#100d20,#17112b 55%,#0d1023);color:var(--ink);font-family:Inter,Arial,sans-serif;overflow-x:hidden}
+body:before,body:after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(2px);animation:float 12s ease-in-out infinite}
+body:before{width:260px;height:260px;left:-120px;bottom:8%;background:#9b78ff18;border:1px solid #bba4ff20}
+body:after{width:190px;height:190px;right:-80px;top:14%;background:#ff70bd16;border:1px solid #ff9bd526;animation-delay:-5s}
+@keyframes float{0%,100%{transform:translate3d(0,0,0) rotate(0)}50%{transform:translate3d(22px,-24px,0) rotate(12deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #c8ff7028}50%{box-shadow:0 0 0 8px #c8ff7000}}
+.shell{width:min(100%,720px);margin:0 auto}
+.shell>.card:first-child{position:relative;overflow:hidden;border:1px solid #6e5c9b70;border-radius:30px;background:linear-gradient(135deg,#302451 0%,#211936 56%,#39214c 100%);box-shadow:0 24px 80px #05030d80;margin-bottom:22px;animation:rise .65s cubic-bezier(.2,.8,.2,1) both}
+.shell>.card:first-child:before{content:"✦  ·  ✧       ✦";position:absolute;right:28px;top:25px;color:#d8c9ff55;font-size:20px;letter-spacing:14px;animation:float 7s ease-in-out infinite}
+.shell>.card:first-child:after{content:"";position:absolute;width:250px;height:250px;right:-92px;bottom:-158px;border:1px solid #c9b3ff38;border-radius:50%;box-shadow:0 0 0 25px #c9b3ff08,0 0 0 52px #c9b3ff06}
+.banner{display:none}.intro{padding:42px 40px 38px;position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;border:1px solid #c8ff7050;border-radius:999px;padding:8px 13px;background:#c8ff7012;color:var(--lime);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px var(--lime);animation:pulse 2s infinite}
+h1{font:600 clamp(36px,7vw,52px)/1.03 Fredoka,Inter,sans-serif;letter-spacing:-.035em;color:#fff;margin:23px 0 13px;max-width:520px}
+.intro p{color:#c9c0df;line-height:1.75;margin:0;font-size:14px;max-width:520px}.required-note{font-size:12px!important;color:#a89acb!important;margin-top:22px!important}
+form{display:grid;gap:13px}
+.field,.captcha{background:linear-gradient(145deg,#211b38ed,#19152ded);border:1px solid var(--line);border-radius:19px;box-shadow:0 12px 30px #05030d25;margin:0;position:relative;animation:rise .6s both;transition:border-color .2s,transform .2s,box-shadow .2s}
+.field:nth-of-type(1){animation-delay:.06s}.field:nth-of-type(2){animation-delay:.12s}.field:nth-of-type(3){animation-delay:.18s}.field:nth-of-type(4){animation-delay:.24s}.field:nth-of-type(5){animation-delay:.3s}.captcha{animation-delay:.36s}
+.field:hover,.captcha:hover{border-color:#8069b7;transform:translateY(-2px);box-shadow:0 16px 34px #05030d40}.field{padding:24px 27px}
+label{display:block;font-size:14px;font-weight:700;margin-bottom:13px;color:#f2edff}.required{color:var(--lime);margin-left:3px}
+input{width:100%;border:1px solid #42375e;border-radius:12px;padding:15px 16px;font:14px Inter,Arial,sans-serif;outline:none;background:var(--field);color:var(--ink);transition:border-color .18s,box-shadow .18s,background .18s}
+input:focus{border-color:var(--purple);background:#1c1730;box-shadow:0 0 0 4px #9b78ff20,0 0 24px #9b78ff10}input::placeholder{color:#77708e}
+.hint{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.55}
+.captcha{padding:23px 27px}.captcha label{margin-bottom:14px}.turnstile-wrap{min-height:66px;display:flex;align-items:center;overflow:hidden}.captcha-help{font-size:12px;color:#aaa2c5;margin:9px 0 0;line-height:1.5}
+.actions{display:flex;align-items:center;gap:18px;padding:7px 2px 0}
+button{border:0;border-radius:13px;background:linear-gradient(100deg,var(--lime),#a9f5a0,var(--lime));background-size:200% 100%;color:#1b2030;font:800 14px Inter,Arial,sans-serif;padding:16px 31px;cursor:pointer;box-shadow:0 8px 25px #b9ff6d25;transition:filter .15s,transform .15s,box-shadow .15s}
+button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-3px) scale(1.015);box-shadow:0 13px 32px #b9ff6d35;animation:shimmer 2s linear infinite}button:active:not(:disabled){transform:translateY(0) scale(.985)}button:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+.status{font-size:13px;line-height:1.5;color:#aaa2c5;min-height:20px}.status.success{color:var(--lime)}.status.error{color:#ff91a8}
+.privacy{color:#958cad;text-align:center;font-size:12px;line-height:1.75;padding:19px 16px;max-width:590px;margin:7px auto 0}.privacy strong{color:#e3dcf6}
+.brand{font:600 12px Fredoka,sans-serif;letter-spacing:.28em;color:#756b91;text-align:center;margin-top:20px}.cooldown{font-variant-numeric:tabular-nums;font-weight:700}
+@media(max-width:520px){body{padding:25px 13px 44px}.shell>.card:first-child{border-radius:22px;margin-bottom:16px}.intro{padding:31px 23px 29px}.field,.captcha{padding:20px}.actions{align-items:stretch;flex-direction:column;gap:11px}button{width:100%}.status{padding:0 2px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
   <main class="shell">
@@ -75,6 +73,11 @@
       <section class="card field">
         <label for="orderType">Order Type <span class="required">*</span></label>
         <input id="orderType" name="orderType" type="text" maxlength="80" placeholder="What type of order are you redeeming?" required>
+      </section>
+      <section class="card field">
+        <label for="targetUser">Target User <span class="required">*</span></label>
+        <input id="targetUser" name="targetUser" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="Swiper username (without @)" required>
+        <p class="hint">Who should receive this order? We'll check that this username belongs to an existing Swiper account before accepting the form.</p>
       </section>
       <section class="card captcha">
         <label>CAPTCHA verification <span class="required">*</span></label>
@@ -171,6 +174,7 @@
     const orderEmail = document.getElementById("orderEmail").value.trim();
     const orderName = document.getElementById("orderName").value.trim();
     const orderType = document.getElementById("orderType").value.trim();
+    const targetUser = document.getElementById("targetUser").value.trim();
     if (!form.reportValidity()) return;
 
     button.disabled = true;
@@ -179,7 +183,7 @@
       const response = await fetch(SUPABASE_FUNCTION, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderEmail, orderName, orderType, token })
+        body: JSON.stringify({ orderEmail, orderName, orderType, targetUser, token })
       });
       const result = await response.json();
       if (!response.ok) {
@@ -196,7 +200,7 @@
       if (window.turnstile) window.turnstile.reset();
       token = "";
       startCooldown(30);
-      setStatus("Your response was submitted successfully. Thank you!", "success");
+      setStatus("Verified Swiper user @" + (result.targetUser || targetUser) + " — your response was submitted!", "success");
     } catch {
       setStatus("Connection error. Check your internet connection and try again.", "error");
       if (window.turnstile) window.turnstile.reset();
