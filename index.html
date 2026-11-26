@@ -338,8 +338,14 @@ button:disabled{opacity:.42;cursor:not-allowed}
   function renderManagedOrder(order) {
     activeOrder = order;
     manageDetails.hidden = false;
-    manageStatus.className = "manage-status" + (order.status === 2 ? " locked" : order.status === 3 ? " cancelled" : "");
-    manageStatus.textContent = order.message || "Order status updated.";
+    manageStatus.className = "manage-status" + (order.status === 2 || order.status === 3 ? " locked" : order.status === 4 ? " cancelled" : "");
+    const statusMessage = {
+      1: "Your order is pending. You can still edit or cancel it.",
+      2: "Your order is being processed. Editing and cancellation are locked.",
+      3: "Your order has been processed to your account!",
+      4: "Your order has been cancelled."
+    };
+    manageStatus.textContent = order.message || statusMessage[order.status] || "Order status updated.";
     document.getElementById("manageEmail").value = order.orderEmail || "";
     document.getElementById("manageName").value = order.orderName || "";
     document.getElementById("manageType").value = order.orderType || "";
@@ -347,7 +353,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const editable = order.status === 1 && order.editable;
     manageActions.hidden = !editable;
     manageEditFields.hidden = !editable;
-    if (order.status === 2 || order.status === 3) {
+    if (order.status !== 1) {
       manageEditFields.hidden = true;
       manageActions.hidden = true;
     }
