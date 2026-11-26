@@ -73,6 +73,14 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .order-tools .credential{background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:15px;margin-top:16px;overflow-wrap:anywhere}
 .order-tools .credential code{display:block;font-size:12px;line-height:1.6;margin:8px 0;color:#333;user-select:all}
 .order-tools .credential small{color:#666;line-height:1.5}
+.order-tools .saved-orders{display:grid;gap:10px;margin:18px 0}
+.order-tools .saved-order{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid #e1e1e1;border-radius:9px;background:#fafafa}
+.order-tools .saved-order-info{min-width:0}
+.order-tools .saved-order-info strong{display:block;font-size:13px;color:#333;margin-bottom:5px}
+.order-tools .saved-order-info small{display:block;color:#777;font-size:11px;overflow-wrap:anywhere}
+.order-tools .saved-order-actions{display:flex;gap:7px;flex-shrink:0}
+.order-tools .saved-order-actions button{padding:9px 12px;font-size:12px}
+.order-tools .empty-orders{padding:15px;border:1px dashed #d5d5d5;border-radius:9px;color:#777;font-size:13px;line-height:1.6}
 .order-tools .manage-status{padding:13px 14px;border-radius:8px;background:#f3f3f3;color:#444;font-size:13px;line-height:1.6;margin:15px 0}
 .order-tools .manage-status.locked{background:#eee;color:#333}
 .order-tools .manage-status.cancelled{background:#f5eeee;color:#8b4141}
@@ -145,7 +153,9 @@ button:disabled{opacity:.42;cursor:not-allowed}
     <section class="order-tools" aria-labelledby="trackHeading">
       <h2 id="trackHeading">Track your order</h2>
       <p>Already submitted an order? Enter the order ID and private management code you received after submitting to view its status, edit it, or cancel it while it is still pending.</p>
-      <form id="trackForm" novalidate>
+      <div id="savedOrders" class="saved-orders" aria-live="polite"></div>
+      <button id="redeemAnother" type="button" class="secondary-button">Redeem another code</button>
+      <form id="trackForm" novalidate hidden>
         <div>
           <label for="manageOrderId">Order ID</label>
           <input id="manageOrderId" autocomplete="off" spellcheck="false" placeholder="Paste your order ID" required>
@@ -154,10 +164,11 @@ button:disabled{opacity:.42;cursor:not-allowed}
           <label for="manageAccessCode">Private management code</label>
           <input id="manageAccessCode" autocomplete="off" spellcheck="false" placeholder="Paste your private code" required>
         </div>
-        <button id="trackButton" type="submit">Track order</button>
+        <div class="manage-actions">
+          <button id="trackButton" type="submit">Track order</button>
+          <button id="backToOrders" class="secondary-button" type="button">Back to my orders</button>
+        </div>
       </form>
-
-      <button id="restoreOrder" class="secondary-button" type="button" hidden>Autofill saved order</button>
       <div class="credential" id="newOrderCredentials" hidden>
         <strong>Your order was submitted!</strong>
         <small>Save both details below. Your private management code is shown only once and cannot be recovered if you lose it.</small>
@@ -221,36 +232,75 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const manageEditFields = document.getElementById("manageEditFields");
   let activeOrder = null;
 
-  const SAVED_ORDER_KEY = "swiper_redeem_saved_order_v1";
-  const restoreOrderButton = document.getElementById("restoreOrder");
+  const SAVED_ORDER_KEY = "swiper_redeem_saved_orders_v2";
+  const savedOrdersElement = document.getElementById("savedOrders");
+  const trackFormElement = document.getElementById("trackForm");
+  const redeemAnotherButton = document.getElementById("redeemAnother");
 
-  function readSavedOrder() {
+  function readSavedOrders() {
     try {
-      const saved = JSON.parse(localStorage.getItem(SAVED_ORDER_KEY) || "null");
-      return saved && typeof saved.id === "string" && typeof saved.code === "string" ? saved : null;
-    } catch { return null; }
+      const parsed = JSON.parse(localStorage.getItem(SAVED_ORDER_KEY) || "[]");
+      if (Array.isArray(parsed)) return parsed.filter(item => item && typeof item.id === "string" && typeof item.code === "string");
+      if (parsed && typeof parsed.id === "string" && typeof parsed.code === "string") return [parsed];
+      return [];
+    } catch { return []; }
+  }
+
+  function renderSavedOrders() {
+    const orders = readSavedOrders();
+    savedOrdersElement.replaceChildren();
+    if (!orders.length) {
+      savedOrdersElement.innerHTML = '<div class="empty-orders">No orders saved on this device yet. Use “Redeem another code” to track an order.</div>';
+      return;
+    }
+    orders.forEach((order, index) => {
+      const card = document.createElement("div");
+      card.className = "saved-order";
+      const info = document.createElement("div");
+      info.className = "saved-order-info";
+      const title = document.createElement("strong");
+      title.textContent = "Order " + (index + 1);
+      const id = document.createElement("small");
+      id.textContent = "ID: " + order.id;
+      info.append(title, id);
+      const actions = document.createElement("div");
+      actions.className = "saved-order-actions";
+      const open = document.createElement("button");
+      open.type = "button";
+      open.textContent = "View";
+      open.addEventListener("click", () => {
+        document.getElementById("manageOrderId").value = order.id;
+        document.getElementById("manageAccessCode").value = order.code;
+        trackFormElement.hidden = false;
+        redeemAnotherButton.hidden = true;
+        trackOrder();
+      });
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "secondary-button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () => {
+        const remaining = readSavedOrders().filter(item => !(item.id === order.id && item.code === order.code));
+        try { localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify(remaining)); renderSavedOrders(); }
+        catch { setStatus("Couldn't update the saved orders on this device.", "error"); }
+      });
+      actions.append(open, remove);
+      card.append(info, actions);
+      savedOrdersElement.append(card);
+    });
   }
 
   function saveOrderLocally(id, code) {
     try {
-      localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify({ id, code, savedAt: Date.now() }));
-      restoreOrderButton.hidden = false;
+      const orders = readSavedOrders();
+      const existing = orders.find(order => order.id === id);
+      if (existing) existing.code = code;
+      else orders.unshift({ id, code, savedAt: Date.now() });
+      localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify(orders));
+      renderSavedOrders();
     } catch {
       setStatus("Your browser couldn't save this order. Keep your order ID and private management code somewhere safe.", "error");
     }
-  }
-
-  function fillSavedOrder(shouldTrack = false) {
-    const saved = readSavedOrder();
-    if (!saved) {
-      restoreOrderButton.hidden = true;
-      setStatus("No saved order was found on this device.", "error");
-      return;
-    }
-    document.getElementById("manageOrderId").value = saved.id;
-    document.getElementById("manageAccessCode").value = saved.code;
-    if (shouldTrack) trackOrder();
-    else setStatus("Saved order details filled in. Press Track order to view the latest status.", "success");
   }
 
   function setOrderCredentials(id, code) {
@@ -318,12 +368,21 @@ button:disabled{opacity:.42;cursor:not-allowed}
 
   restoreOrderButton.addEventListener("click", () => fillSavedOrder(true));
 
-  // Restore and refresh the last saved order automatically on this device.
-  const savedOrderOnLoad = readSavedOrder();
-  if (savedOrderOnLoad) {
-    restoreOrderButton.hidden = false;
-    fillSavedOrder(true);
-  }
+  // Show saved orders on arrival without autofilling or contacting the server.
+  renderSavedOrders();
+
+  redeemAnotherButton.addEventListener("click", () => {
+    trackFormElement.hidden = false;
+    redeemAnotherButton.hidden = true;
+    document.getElementById("manageOrderId").focus();
+  });
+  document.getElementById("backToOrders").addEventListener("click", () => {
+    trackFormElement.reset();
+    trackFormElement.hidden = true;
+    redeemAnotherButton.hidden = false;
+    manageDetails.hidden = true;
+    renderSavedOrders();
+  });
 
   document.getElementById("saveOrderChanges").addEventListener("click", async () => {
     const saveButton = document.getElementById("saveOrderChanges");
