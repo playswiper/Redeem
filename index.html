@@ -346,8 +346,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
       if (!menu.hidden) { closeMenu(); return; }
       document.querySelectorAll(".custom-select-menu").forEach(el => el.hidden = true);
       document.querySelectorAll(".custom-select-trigger").forEach(el => el.setAttribute("aria-expanded", "false"));
-      positionMenu();
       menu.hidden = false;
+      positionMenu();
       trigger.setAttribute("aria-expanded", "true");
     });
     window.addEventListener("resize", () => { if (!menu.hidden) positionMenu(); });
