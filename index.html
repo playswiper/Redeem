@@ -360,6 +360,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
   }
   if (requestedQuantity !== null) {
     quantityInput.value = String(requestedQuantity);
+    formatCoinAmount(quantityInput);
     document.getElementById("orderType").value = "Bag of gold";
     syncOrderTypeFields("Bag of gold");
     const quantityHint = document.querySelector('label[for="quantity"]');
