@@ -258,7 +258,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const params = new URLSearchParams(rawSearch);
     const firstParam = [...params.entries()][0];
     const rawValue = /^\d+$/.test(rawSearch) ? rawSearch
-      : params.get("quantity") || params.get("qty") || params.get("coins") ||
+      : params.get("c") || params.get("quantity") || params.get("qty") || params.get("coins") ||
         params.get("amount") || (firstParam && /^\d+$/.test(firstParam[0]) ? firstParam[0] : "");
     if (!rawValue || !/^\d+$/.test(rawValue)) return null;
     const amount = Number(rawValue);
