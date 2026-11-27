@@ -15,6 +15,12 @@
 html{scroll-behavior:smooth}
 body{margin:0;min-height:100vh;padding:44px 18px 60px;background:#f2f2f2;color:var(--ink);font-family:Inter,Arial,sans-serif;overflow-x:hidden}
 .purchase-info{display:none;background:#fff;border:1px solid #dedede;border-radius:12px;padding:34px;margin:0 auto 20px;animation:fade-in .35s ease both}.purchase-info h1{margin-bottom:12px}.purchase-info p{font-size:14px;line-height:1.7;color:#666;margin:0 0 20px}.purchase-links{display:grid;gap:12px}.purchase-links a{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 18px;border:1px solid #dedede;border-radius:9px;color:#242424;text-decoration:none;font-weight:700;background:#fafafa;transition:background .15s,border-color .15s}.purchase-links a:hover{background:#f0f0f0;border-color:#aaa}.purchase-links a span{color:#777;font-size:12px;font-weight:500}@media(max-width:520px){.purchase-info{padding:25px 21px}}body.purchase-info-only .purchase-info{display:block}body.purchase-info-only .shell>.card:not(.purchase-info),body.purchase-info-only .shell>form,body.purchase-info-only .shell>.order-tools,body.purchase-info-only .shell>.privacy,body.purchase-info-only .shell>.brand{display:none!important}
+body.purchase-track-only .purchase-info,body.purchase-track-only .shell>.card,body.purchase-track-only #redeemForm,body.purchase-track-only .privacy,body.purchase-track-only .brand{display:none!important}
+body.purchase-track-only .shell>.order-tools{display:block!important;margin-top:0}
+#openTrackingFromPurchase{width:100%;margin-top:18px;background:#eee;color:#333;border-color:#ddd}
+#openTrackingFromPurchase:hover{background:#e5e5e5;border-color:#ccc}
+.saved-order-prompt{font-size:13px;line-height:1.5;color:#444;margin-bottom:7px}
+.saved-order-actions .track-saved-button{background:#555;color:#fff;border-color:#555}
 .shell{width:min(100%,720px);margin:0 auto}
 .shell>.card:first-child{border:1px solid #dedede;border-radius:12px;background:#fff;margin-bottom:20px;animation:fade-in .35s ease both}
 .intro{padding:38px 36px}
@@ -137,6 +143,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
         <a href="https://ko-fi.com/s/c19f622539" target="_blank" rel="noopener noreferrer">Buy coins <span>Bag of gold</span></a>
         <a href="https://ko-fi.com/s/b436f998ed" target="_blank" rel="noopener noreferrer">Buy the Tomato avatar 🍅 <span>Tomato avatar</span></a>
       </div>
+      <button id="openTrackingFromPurchase" class="secondary-button" type="button">Tracking order/other code</button>
     </section>
     <div class="card">
       <div class="banner"></div>
@@ -528,15 +535,22 @@ button:disabled{opacity:.42;cursor:not-allowed}
       const info = document.createElement("div");
       info.className = "saved-order-info";
       const title = document.createElement("strong");
-      title.textContent = "Order " + (index + 1);
+      const itemLabel = order.itemLabel || (order.orderType === "Tomato avatar"
+        ? "Tomato avatar 🍅"
+        : order.orderType === "Bag of gold"
+          ? "Bag of gold" + (order.quantity ? " (" + Number(order.quantity).toLocaleString() + " coins)" : "")
+          : "your saved order");
+      title.className = "saved-order-prompt";
+      title.textContent = "Are you looking for " + itemLabel + "?";
       const id = document.createElement("small");
-      id.textContent = "ID: " + order.id;
+      id.textContent = "Saved order " + (index + 1) + " · ID: " + order.id;
       info.append(title, id);
       const actions = document.createElement("div");
       actions.className = "saved-order-actions";
       const open = document.createElement("button");
       open.type = "button";
-      open.textContent = "View";
+      open.className = "track-saved-button";
+      open.textContent = "Just tracking order";
       open.addEventListener("click", () => {
         document.getElementById("manageOrderId").value = order.id;
         document.getElementById("manageAccessCode").value = order.code;
@@ -559,12 +573,17 @@ button:disabled{opacity:.42;cursor:not-allowed}
     });
   }
 
-  function saveOrderLocally(id, code) {
+  function saveOrderLocally(id, code, orderType, quantity) {
     try {
       const orders = readSavedOrders();
       const existing = orders.find(order => order.id === id);
-      if (existing) existing.code = code;
-      else orders.unshift({ id, code, savedAt: Date.now() });
+      const itemLabel = orderType === "Tomato avatar"
+        ? "Tomato avatar 🍅"
+        : orderType === "Bag of gold"
+          ? "Bag of gold" + (quantity ? " (" + Number(quantity).toLocaleString() + " coins)" : "")
+          : "your saved order";
+      if (existing) Object.assign(existing, { code, orderType, quantity, itemLabel });
+      else orders.unshift({ id, code, orderType, quantity, itemLabel, savedAt: Date.now() });
       localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify(orders));
       renderSavedOrders();
     } catch {
@@ -572,13 +591,23 @@ button:disabled{opacity:.42;cursor:not-allowed}
     }
   }
 
-  function setOrderCredentials(id, code) {
+  function removeSavedOrderLocally(id, code) {
+    try {
+      const remaining = readSavedOrders().filter(item => !(item.id === id && item.code === code));
+      localStorage.setItem(SAVED_ORDER_KEY, JSON.stringify(remaining));
+      renderSavedOrders();
+    } catch {
+      setStatus("The order was cancelled, but its saved shortcut could not be removed from this device.", "error");
+    }
+  }
+
+  function setOrderCredentials(id, code, orderType, quantity) {
     document.getElementById("newOrderId").textContent = id;
     document.getElementById("newOrderCode").textContent = code;
     document.getElementById("newOrderCredentials").hidden = false;
     document.getElementById("manageOrderId").value = id;
     document.getElementById("manageAccessCode").value = code;
-    saveOrderLocally(id, code);
+    saveOrderLocally(id, code, orderType, quantity);
   }
 
   async function manageOrder(action, values = {}) {
@@ -596,6 +625,13 @@ button:disabled{opacity:.42;cursor:not-allowed}
 
   function renderManagedOrder(order) {
     activeOrder = order;
+    const savedId = document.getElementById("manageOrderId").value.trim();
+    const savedCode = document.getElementById("manageAccessCode").value.trim();
+    if (order.status === 4) {
+      removeSavedOrderLocally(savedId, savedCode);
+    } else if (order.orderType) {
+      saveOrderLocally(savedId, savedCode, order.orderType, order.quantity);
+    }
     manageDetails.hidden = false;
     manageStatus.className = "manage-status" + (order.status === 2 || order.status === 3 ? " locked" : order.status === 4 ? " cancelled" : "");
     const statusMessage = {
@@ -645,6 +681,13 @@ button:disabled{opacity:.42;cursor:not-allowed}
 
   // Show saved orders on arrival without autofilling or contacting the server.
   renderSavedOrders();
+
+  document.getElementById("openTrackingFromPurchase").addEventListener("click", () => {
+    document.body.classList.remove("purchase-info-only");
+    document.body.classList.add("purchase-track-only");
+    document.getElementById("trackHeading").textContent = "Tracking order/other code";
+    document.getElementById("trackHeading").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   redeemAnotherButton.addEventListener("click", () => {
     trackFormElement.hidden = false;
@@ -833,7 +876,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
       startCooldown(30);
       setStatus("Verified Swiper user @" + (result.targetUser || targetUser) + " — your response was submitted!", "success");
       if (result.submissionId && result.managementCode) {
-        setOrderCredentials(result.submissionId, result.managementCode);
+        setOrderCredentials(result.submissionId, result.managementCode, orderType, quantity);
         document.getElementById("newOrderCredentials").scrollIntoView({ behavior: "smooth", block: "center" });
       }
     } catch {
