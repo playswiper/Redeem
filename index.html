@@ -123,8 +123,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
       </section>
       <section class="card field">
         <label for="quantity">Quantity <span class="required">*</span></label>
-        <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" required>
-        <p class="hint">Use the up and down arrows to choose a quantity (1–99).</p>
+        <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" step="1" value="1" required>
+        <p class="hint">Enter the exact number of coin packs from your purchase. There is no 99-pack limit.</p>
       </section>
       <section class="card field">
         <label for="targetUser">Target User <span class="required">*</span></label>
@@ -206,7 +206,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
           </div>
           <div style="margin-bottom:12px">
             <label for="manageQuantity">Quantity</label>
-            <input id="manageQuantity" type="number" inputmode="numeric" min="1" max="99" step="1" value="1">
+            <input id="manageQuantity" type="number" inputmode="numeric" min="1" step="1" value="1">
           </div>
           <div>
             <label for="manageTarget">Target User</label>
@@ -229,6 +229,29 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const SUPABASE_FUNCTION = "https://upghyzhawctughyojwpo.supabase.co/functions/v1/redeem-submit";
   const SITE_KEY = "0x4AAAAAAF9cX8702IwLD8nj";
   const form = document.getElementById("redeemForm");
+  const quantityInput = document.getElementById("quantity");
+
+  // Accept both a short link such as ?250 and named forms such as ?quantity=250.
+  // A valid amount preselects the coin pack order type and fills the quantity.
+  function getRequestedQuantity() {
+    const rawSearch = window.location.search.replace(/^\\?/, "");
+    const params = new URLSearchParams(rawSearch);
+    const firstParam = [...params.entries()][0];
+    const rawValue = /^\\d+$/.test(rawSearch) ? rawSearch
+      : params.get("quantity") || params.get("qty") || params.get("coins") ||
+        params.get("amount") || (firstParam && /^\\d+$/.test(firstParam[0]) ? firstParam[0] : "");
+    if (!rawValue || !/^\\d+$/.test(rawValue)) return null;
+    const amount = Number(rawValue);
+    return Number.isSafeInteger(amount) && amount >= 1 && amount <= 2147483647 ? amount : null;
+  }
+
+  const requestedQuantity = getRequestedQuantity();
+  if (requestedQuantity !== null) {
+    quantityInput.value = String(requestedQuantity);
+    document.getElementById("orderType").value = "Bag of gold";
+    const quantityHint = document.querySelector('label[for="quantity"]');
+    if (quantityHint) quantityHint.title = "Prefilled from the quantity in this link.";
+  }
   const button = document.getElementById("submitButton");
   const status = document.getElementById("formStatus");
   const captchaHelp = document.getElementById("captchaHelp");
