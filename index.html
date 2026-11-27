@@ -89,6 +89,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .order-tools .empty-orders{padding:15px;border:1px dashed #d5d5d5;border-radius:9px;color:#777;font-size:13px;line-height:1.6}
 .order-tools .manage-status{padding:13px 14px;border-radius:8px;background:#f3f3f3;color:#444;font-size:13px;line-height:1.6;margin:15px 0}
 .order-tools .manage-status.locked{background:#eee;color:#333}
+.order-tools .manage-status.completed{background:#e8f5e9;color:#216b32;border:1px solid #b7dfbd}
 .order-tools .manage-status.cancelled{background:#f5eeee;color:#8b4141}
 .order-tools .manage-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
 .order-tools .manage-actions button{width:auto}
@@ -541,7 +542,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
       const open = document.createElement("button");
       open.type = "button";
       open.className = "track-saved-button";
-      open.textContent = "Just tracking order";
+      open.textContent = "Track Order";
       open.addEventListener("click", () => {
         document.getElementById("manageOrderId").value = order.id;
         document.getElementById("manageAccessCode").value = order.code;
@@ -624,7 +625,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
       saveOrderLocally(savedId, savedCode, order.orderType, order.quantity);
     }
     manageDetails.hidden = false;
-    manageStatus.className = "manage-status" + (order.status === 2 || order.status === 3 ? " locked" : order.status === 4 ? " cancelled" : "");
+    manageStatus.className = "manage-status" + (order.status === 3 ? " completed" : order.status === 2 ? " locked" : order.status === 4 ? " cancelled" : "");
     const statusMessage = {
       1: "Your order is pending. You can still edit or cancel it.",
       2: "Your order is being processed. Editing and cancellation are locked.",
