@@ -115,7 +115,16 @@ button:disabled{opacity:.42;cursor:not-allowed}
       </section>
       <section class="card field">
         <label for="orderType">Order Type <span class="required">*</span></label>
-        <input id="orderType" name="orderType" type="text" maxlength="80" placeholder="What type of order are you redeeming?" required>
+        <select id="orderType" name="orderType" required>
+          <option value="" selected disabled>Choose an order type</option>
+          <option value="Bag of gold">Bag of gold</option>
+          <option value="Tomato avatar">Tomato avatar</option>
+        </select>
+      </section>
+      <section class="card field">
+        <label for="quantity">Quantity <span class="required">*</span></label>
+        <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" required>
+        <p class="hint">Use the up and down arrows to choose a quantity (1–99).</p>
       </section>
       <section class="card field">
         <label for="targetUser">Target User <span class="required">*</span></label>
@@ -190,7 +199,14 @@ button:disabled{opacity:.42;cursor:not-allowed}
           </div>
           <div style="margin-bottom:12px">
             <label for="manageType">Order Type</label>
-            <input id="manageType" maxlength="80">
+            <select id="manageType">
+              <option value="Bag of gold">Bag of gold</option>
+              <option value="Tomato avatar">Tomato avatar</option>
+            </select>
+          </div>
+          <div style="margin-bottom:12px">
+            <label for="manageQuantity">Quantity</label>
+            <input id="manageQuantity" type="number" inputmode="numeric" min="1" max="99" step="1" value="1">
           </div>
           <div>
             <label for="manageTarget">Target User</label>
@@ -348,7 +364,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
     manageStatus.textContent = order.message || statusMessage[order.status] || "Order status updated.";
     document.getElementById("manageEmail").value = order.orderEmail || "";
     document.getElementById("manageName").value = order.orderName || "";
-    document.getElementById("manageType").value = order.orderType || "";
+    document.getElementById("manageType").value = order.orderType || "Bag of gold";
+    document.getElementById("manageQuantity").value = order.quantity || 1;
     document.getElementById("manageTarget").value = order.targetUser || "";
     const editable = order.status === 1 && order.editable;
     manageActions.hidden = !editable;
@@ -406,7 +423,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
       const order = await manageOrder("edit", {
         orderEmail: document.getElementById("manageEmail").value.trim(),
         orderName: document.getElementById("manageName").value.trim(),
-        orderType: document.getElementById("manageType").value.trim(),
+        orderType: document.getElementById("manageType").value,
+        quantity: Number(document.getElementById("manageQuantity").value),
         targetUser: document.getElementById("manageTarget").value.trim()
       });
       renderManagedOrder(order);
@@ -541,7 +559,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
     if (!captchaReady || !token || Date.now() < cooldownUntil) return;
     const orderEmail = document.getElementById("orderEmail").value.trim();
     const orderName = document.getElementById("orderName").value.trim();
-    const orderType = document.getElementById("orderType").value.trim();
+    const orderType = document.getElementById("orderType").value;
+    const quantity = Number(document.getElementById("quantity").value);
     const targetUser = document.getElementById("targetUser").value.trim();
     if (!form.reportValidity()) return;
 
@@ -551,7 +570,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
       const response = await fetch(SUPABASE_FUNCTION, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderEmail, orderName, orderType, targetUser, token })
+        body: JSON.stringify({ orderEmail, orderName, orderType, quantity, targetUser, token })
       });
       const result = await response.json();
       if (!response.ok) {
