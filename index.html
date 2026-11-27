@@ -445,6 +445,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
   }
   if (isTomatoLink) {
     document.getElementById("orderType").value = "Tomato avatar";
+    document.getElementById("orderType").dispatchEvent(new Event("change", { bubbles: true }));
     syncOrderTypeFields("Tomato avatar");
     window.setTimeout(() => showOrderConfirmation("Are you redeeming a Tomato avatar? The amount field will stay hidden for this item."), 150);
   } else if (redeemParams.has("c") && requestedQuantity !== null) {
@@ -454,6 +455,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     quantityInput.value = String(requestedQuantity);
     formatCoinAmount(quantityInput);
     document.getElementById("orderType").value = "Bag of gold";
+    document.getElementById("orderType").dispatchEvent(new Event("change", { bubbles: true }));
     syncOrderTypeFields("Bag of gold");
     const quantityHint = document.querySelector('label[for="quantity"]');
     if (quantityHint) quantityHint.title = "Prefilled from the quantity in this link.";
