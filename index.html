@@ -143,6 +143,10 @@ button:disabled{opacity:.42;cursor:not-allowed}
         <a href="https://ko-fi.com/s/c19f622539" target="_blank" rel="noopener noreferrer">Buy coins <span>Bag of gold</span></a>
         <a href="https://ko-fi.com/s/b436f998ed" target="_blank" rel="noopener noreferrer">Buy the Tomato avatar 🍅 <span>Tomato avatar</span></a>
       </div>
+      <div id="savedOrderWelcome" class="credential" hidden>
+        <strong id="savedOrderWelcomeText">Are you looking for your saved item?</strong>
+        <button id="savedOrderWelcomeTrack" type="button" class="secondary-button">Just tracking order</button>
+      </div>
       <button id="openTrackingFromPurchase" class="secondary-button" type="button">Tracking order/other code</button>
     </section>
     <div class="card">
@@ -522,6 +526,19 @@ button:disabled{opacity:.42;cursor:not-allowed}
   function renderSavedOrders() {
     const orders = readSavedOrders();
     savedOrdersElement.replaceChildren();
+    const welcome = document.getElementById("savedOrderWelcome");
+    if (welcome) {
+      welcome.hidden = !orders.length;
+      if (orders.length) {
+        const first = orders[0];
+        const label = first.itemLabel || (first.orderType === "Tomato avatar"
+          ? "Tomato avatar 🍅"
+          : first.orderType === "Bag of gold"
+            ? "Bag of gold" + (first.quantity ? " (" + Number(first.quantity).toLocaleString() + " coins)" : "")
+            : "your saved order");
+        document.getElementById("savedOrderWelcomeText").textContent = "Are you looking for " + label + "?";
+      }
+    }
     if (!orders.length) {
       const empty = document.createElement("div");
       empty.className = "empty-orders";
@@ -686,6 +703,20 @@ button:disabled{opacity:.42;cursor:not-allowed}
     document.body.classList.remove("purchase-info-only");
     document.body.classList.add("purchase-track-only");
     document.getElementById("trackHeading").textContent = "Tracking order/other code";
+    document.getElementById("trackHeading").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("savedOrderWelcomeTrack").addEventListener("click", () => {
+    const order = readSavedOrders()[0];
+    if (!order) return;
+    document.body.classList.remove("purchase-info-only");
+    document.body.classList.add("purchase-track-only");
+    document.getElementById("trackHeading").textContent = "Tracking order/other code";
+    document.getElementById("manageOrderId").value = order.id;
+    document.getElementById("manageAccessCode").value = order.code;
+    trackFormElement.hidden = true;
+    redeemAnotherButton.hidden = false;
+    trackOrder();
     document.getElementById("trackHeading").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
