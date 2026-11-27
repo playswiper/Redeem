@@ -22,15 +22,16 @@ body.purchase-track-only .shell>.order-tools{display:block!important;margin-top:
 .saved-order-actions .track-saved-button{background:#555;color:#fff;border-color:#555}
 .shell{width:min(100%,720px);margin:0 auto}
 .shell>.card:first-child{border:1px solid #dedede;border-radius:12px;background:#fff;margin-bottom:20px;animation:fade-in .35s ease both}
-.intro{padding:38px 36px}
-h1{font:600 clamp(34px,7vw,48px)/1.08 Fredoka,Inter,sans-serif;letter-spacing:-.025em;color:#242424;margin:0 0 12px}
-.intro-title-row{display:flex;align-items:center;justify-content:flex-start;margin-bottom:16px}
+.intro{padding:28px 30px}
+h1{font:600 clamp(34px,7vw,48px)/1.08 Fredoka,Inter,sans-serif;letter-spacing:-.025em;color:#242424;margin:0 0 8px}
+.intro-layout{display:flex;align-items:center;gap:16px}
+.intro-title-image{display:block;width:clamp(130px,22vw,180px);height:clamp(130px,22vw,180px);flex:0 0 auto;object-fit:contain;border-radius:14px}
+.intro-content{flex:1;min-width:0}
+.intro-title-row{display:flex;align-items:center;justify-content:flex-start;margin:0 0 9px}
 .intro-title-row h1{margin:0;min-width:0}
-.intro-description-row{display:flex;align-items:center;justify-content:space-between;gap:24px}
-.intro-description-copy{flex:1;min-width:0}
-.intro-title-image{display:block;width:clamp(160px,27vw,220px);height:clamp(160px,27vw,220px);flex:0 0 auto;object-fit:contain;border-radius:16px}
-.intro-description-copy .required-note{margin-top:20px!important}
-@media(max-width:520px){.intro{padding:29px 22px}.intro-description-row{gap:12px}.intro-title-image{width:clamp(116px,32vw,150px);height:clamp(116px,32vw,150px)}}
+.intro-description-copy{min-width:0}
+.intro-description-copy .required-note{margin-top:12px!important}
+@media(max-width:520px){.intro{padding:22px 18px}.intro-layout{gap:11px}.intro-title-image{width:clamp(92px,27vw,125px);height:clamp(92px,27vw,125px)}}
 
 .intro p{color:#666;line-height:1.7;margin:0;font-size:14px;max-width:540px}
 .required-note{font-size:12px!important;color:#777!important;margin-top:20px!important}
@@ -156,15 +157,17 @@ button:disabled{opacity:.42;cursor:not-allowed}
     <div class="card">
       <div class="banner"></div>
       <header class="intro">
-        <div class="intro-title-row">
-          <h1>Redeem an order</h1>
-        </div>
-        <div class="intro-description-row">
-          <div class="intro-description-copy">
-            <p>Complete this form with the details from your order. Your response is sent privately to the Swiper team for review.</p>
-            <p class="required-note">* Indicates a required question</p>
-          </div>
+        <div class="intro-layout">
           <img class="intro-title-image" src="https://playswiper.com/Images/FalviconMainImage.jpeg" alt="Swiper">
+          <div class="intro-content">
+            <div class="intro-title-row">
+              <h1>Redeem an order</h1>
+            </div>
+            <div class="intro-description-copy">
+              <p>Complete this form with the details from your order. Your response is sent privately to the Swiper team for review.</p>
+              <p class="required-note">* Indicates a required question</p>
+            </div>
+          </div>
         </div>
       </header>
     </div>
