@@ -121,10 +121,10 @@ button:disabled{opacity:.42;cursor:not-allowed}
           <option value="Tomato avatar">Tomato avatar</option>
         </select>
       </section>
-      <section class="card field">
-        <label for="quantity">Quantity <span class="required">*</span></label>
+      <section class="card field" id="quantityField">
+        <label for="quantity" id="quantityLabel">Coin Amount <span class="required">*</span></label>
         <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" step="1" value="1" required>
-        <p class="hint">Enter the exact number of coin packs from your purchase. There is no 99-pack limit.</p>
+        <p class="hint" id="quantityHint">Enter the exact number of coins from your purchase.</p>
       </section>
       <section class="card field">
         <label for="targetUser">Target User <span class="required">*</span></label>
@@ -204,8 +204,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
               <option value="Tomato avatar">Tomato avatar</option>
             </select>
           </div>
-          <div style="margin-bottom:12px">
-            <label for="manageQuantity">Quantity</label>
+          <div style="margin-bottom:12px" id="manageQuantityField">
+            <label for="manageQuantity" id="manageQuantityLabel">Coin Amount</label>
             <input id="manageQuantity" type="number" inputmode="numeric" min="1" step="1" value="1">
           </div>
           <div>
@@ -230,6 +230,26 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const SITE_KEY = "0x4AAAAAAF9cX8702IwLD8nj";
   const form = document.getElementById("redeemForm");
   const quantityInput = document.getElementById("quantity");
+  const quantityField = document.getElementById("quantityField");
+  const orderTypeSelect = document.getElementById("orderType");
+  const manageTypeSelect = document.getElementById("manageType");
+
+  function syncOrderTypeFields(type, manage = false) {
+    const isCoins = type === "Bag of gold";
+    if (manage) {
+      document.getElementById("manageQuantityField").hidden = !isCoins;
+      document.getElementById("manageQuantityLabel").innerHTML = 'Coin Amount';
+    } else {
+      quantityField.hidden = !isCoins;
+      quantityInput.required = isCoins;
+      document.getElementById("quantityLabel").innerHTML = 'Coin Amount <span class="required">*</span>';
+      document.getElementById("quantityHint").textContent = "Enter the exact number of coins from your purchase.";
+    }
+  }
+
+  orderTypeSelect.addEventListener("change", () => syncOrderTypeFields(orderTypeSelect.value));
+  manageTypeSelect.addEventListener("change", () => syncOrderTypeFields(manageTypeSelect.value, true));
+
 
   // Accept both a short link such as ?250 and named forms such as ?quantity=250.
   // A valid amount preselects the coin pack order type and fills the quantity.
@@ -249,6 +269,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
   if (requestedQuantity !== null) {
     quantityInput.value = String(requestedQuantity);
     document.getElementById("orderType").value = "Bag of gold";
+    syncOrderTypeFields("Bag of gold");
     const quantityHint = document.querySelector('label[for="quantity"]');
     if (quantityHint) quantityHint.title = "Prefilled from the quantity in this link.";
   }
@@ -390,6 +411,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     document.getElementById("manageName").value = order.orderName || "";
     document.getElementById("manageType").value = order.orderType || "Bag of gold";
     document.getElementById("manageQuantity").value = order.quantity || 1;
+    syncOrderTypeFields(document.getElementById("manageType").value, true);
     document.getElementById("manageTarget").value = order.targetUser || "";
     const editable = order.status === 1 && order.editable;
     manageActions.hidden = !editable;
@@ -448,7 +470,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
         orderEmail: document.getElementById("manageEmail").value.trim(),
         orderName: document.getElementById("manageName").value.trim(),
         orderType: document.getElementById("manageType").value,
-        quantity: Number(document.getElementById("manageQuantity").value),
+        quantity: document.getElementById("manageType").value === "Bag of gold" ? Number(document.getElementById("manageQuantity").value) : 1,
         targetUser: document.getElementById("manageTarget").value.trim()
       });
       renderManagedOrder(order);
@@ -584,7 +606,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const orderEmail = document.getElementById("orderEmail").value.trim();
     const orderName = document.getElementById("orderName").value.trim();
     const orderType = document.getElementById("orderType").value;
-    const quantity = Number(document.getElementById("quantity").value);
+    const quantity = orderType === "Bag of gold" ? Number(document.getElementById("quantity").value) : 1;
     const targetUser = document.getElementById("targetUser").value.trim();
     if (!form.reportValidity()) return;
 
