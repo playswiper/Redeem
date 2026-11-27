@@ -100,6 +100,31 @@ button:disabled{opacity:.42;cursor:not-allowed}
 .custom-select-option:hover,.custom-select-option.selected{background:#eee;color:#222}
 @media(max-width:520px){.order-tools{padding:20px}.order-tools .manage-actions{flex-direction:column}.order-tools .manage-actions button{width:100%}}
 
+
+/* Custom order type menu */
+.custom-select{position:relative;width:100%;z-index:60}
+.custom-select-trigger{width:100%;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;background:#fafafa;color:#242424;border:1px solid #d5d5d5;border-radius:8px;padding:14px 15px;font:600 14px Inter,Arial,sans-serif}
+.custom-select-trigger:after{content:"";width:9px;height:9px;flex:0 0 9px;border-right:2px solid #666;border-bottom:2px solid #666;transform:rotate(45deg) translateY(-2px);transition:transform .16s}
+.custom-select-trigger[aria-expanded="true"]{background:#fff;border-color:#777;box-shadow:0 0 0 3px #77777714}
+.custom-select-trigger[aria-expanded="true"]:after{transform:rotate(225deg) translate(-2px,-2px)}
+.custom-select-menu{position:fixed;z-index:9999;padding:7px;background:#fff;border:1px solid #d8d8d8;border-radius:10px;box-shadow:0 14px 38px #00000020;max-height:min(300px,calc(100vh - 24px));overflow-y:auto}
+.custom-select-menu[hidden]{display:none}
+.custom-select-option{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;color:#292929;border:0;border-radius:7px;padding:13px 12px;font:600 14px Inter,Arial,sans-serif;cursor:pointer}
+.custom-select-option small{font:400 12px/1.45 Inter,Arial,sans-serif;color:#777}
+.custom-select-option:hover,.custom-select-option:focus-visible{background:#f1f1f1;outline:none}
+.custom-select-option.selected{background:#ededed}
+.order-confirm-overlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:20px;background:#17171770;backdrop-filter:blur(3px)}
+.order-confirm-overlay[hidden]{display:none}
+.order-confirm-card{width:min(100%,420px);padding:28px;background:#fff;border:1px solid #dedede;border-radius:13px;box-shadow:0 18px 60px #00000025;animation:fade-in .2s ease both}
+.order-confirm-eyebrow{font-size:10px;letter-spacing:.16em;font-weight:800;color:#777;margin-bottom:12px}
+.order-confirm-title{font:600 29px/1.15 Fredoka,Inter,sans-serif;color:#242424;margin:0 0 9px}
+.order-confirm-copy{font-size:14px;line-height:1.6;color:#666;margin:0 0 22px}
+.order-confirm-actions{display:flex;gap:9px}
+.order-confirm-actions button{flex:1;padding:13px 15px}
+.order-confirm-actions .confirm-no{background:#f0f0f0;color:#333;border-color:#ddd}
+.order-confirm-actions .confirm-no:hover{background:#e5e5e5;border-color:#ccc}
+@media(max-width:520px){.order-confirm-card{padding:23px}.order-confirm-actions{flex-direction:column}}
+
 </style>
 </head>
 <body>
@@ -235,6 +260,19 @@ button:disabled{opacity:.42;cursor:not-allowed}
     <div class="brand">SWIPER</div>
   </main>
 
+
+  <div class="order-confirm-overlay" id="orderConfirmOverlay" hidden>
+    <section class="order-confirm-card" role="dialog" aria-modal="true" aria-labelledby="orderConfirmTitle" aria-describedby="orderConfirmCopy">
+      <div class="order-confirm-eyebrow">ORDER CONFIRMATION</div>
+      <h2 class="order-confirm-title" id="orderConfirmTitle">Did you order this?</h2>
+      <p class="order-confirm-copy" id="orderConfirmCopy"></p>
+      <div class="order-confirm-actions">
+        <button type="button" id="orderConfirmYes">Yes, continue</button>
+        <button type="button" class="confirm-no" id="orderConfirmNo">No, go back</button>
+      </div>
+    </section>
+  </div>
+
 <script>
 (() => {
   const SUPABASE_FUNCTION = "https://upghyzhawctughyojwpo.supabase.co/functions/v1/redeem-submit";
@@ -257,8 +295,12 @@ button:disabled{opacity:.42;cursor:not-allowed}
     menu.className = "custom-select-menu";
     menu.setAttribute("role", "listbox");
     menu.hidden = true;
+    const descriptions = {
+      "Bag of gold": "Add coins to a Swiper account",
+      "Tomato avatar": "Redeem the Tomato avatar"
+    };
     const refresh = () => {
-      trigger.textContent = select.options[select.selectedIndex]?.textContent || "Choose an option";
+      trigger.textContent = select.options[select.selectedIndex]?.textContent || "Choose an order type";
       [...menu.children].forEach(item => {
         const selected = item.dataset.value === select.value;
         item.classList.toggle("selected", selected);
@@ -270,33 +312,54 @@ button:disabled{opacity:.42;cursor:not-allowed}
       const item = document.createElement("button");
       item.type = "button";
       item.className = "custom-select-option";
-      item.textContent = option.textContent;
       item.dataset.value = option.value;
       item.setAttribute("role", "option");
+      const title = document.createElement("span");
+      title.textContent = option.textContent;
+      const detail = document.createElement("small");
+      detail.textContent = descriptions[option.value] || "Select this order type";
+      item.append(title, detail);
       item.addEventListener("click", () => {
         select.value = option.value;
         select.dispatchEvent(new Event("change", { bubbles: true }));
-        menu.hidden = true;
-        trigger.setAttribute("aria-expanded", "false");
+        closeMenu();
         refresh();
+        trigger.focus();
       });
       menu.append(item);
     });
+    document.body.append(menu);
+    function positionMenu() {
+      const rect = trigger.getBoundingClientRect();
+      const menuHeight = Math.min(menu.scrollHeight || 150, 300, window.innerHeight - 24);
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUp = spaceBelow < Math.min(menuHeight, 180) && rect.top > spaceBelow;
+      menu.style.left = Math.max(12, Math.min(rect.left, window.innerWidth - rect.width - 12)) + "px";
+      menu.style.width = rect.width + "px";
+      menu.style.top = (openUp ? Math.max(12, rect.top - menuHeight - 6) : Math.min(window.innerHeight - menuHeight - 12, rect.bottom + 6)) + "px";
+    }
+    function closeMenu() {
+      menu.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+    }
     trigger.addEventListener("click", () => {
-      const shouldOpen = menu.hidden;
+      if (!menu.hidden) { closeMenu(); return; }
       document.querySelectorAll(".custom-select-menu").forEach(el => el.hidden = true);
       document.querySelectorAll(".custom-select-trigger").forEach(el => el.setAttribute("aria-expanded", "false"));
-      menu.hidden = !shouldOpen;
-      trigger.setAttribute("aria-expanded", String(shouldOpen));
+      positionMenu();
+      menu.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
     });
+    window.addEventListener("resize", () => { if (!menu.hidden) positionMenu(); });
+    window.addEventListener("scroll", () => { if (!menu.hidden) positionMenu(); }, true);
     document.addEventListener("click", event => {
-      if (!wrapper.contains(event.target)) {
-        menu.hidden = true;
-        trigger.setAttribute("aria-expanded", "false");
-      }
+      if (!wrapper.contains(event.target) && !menu.contains(event.target)) closeMenu();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") { closeMenu(); trigger.focus(); }
     });
     select.addEventListener("change", refresh);
-    wrapper.append(trigger, menu);
+    wrapper.append(trigger);
     select.insertAdjacentElement("afterend", wrapper);
     select.classList.add("visually-hidden-select");
     refresh();
@@ -360,12 +423,32 @@ button:disabled{opacity:.42;cursor:not-allowed}
   const requestedQuantity = getRequestedQuantity();
   const redeemParams = new URLSearchParams(window.location.search);
   const isTomatoLink = redeemParams.has("t") || /(?:^|[?&])t(?:=|&|$)/i.test(window.location.search);
+  function showOrderConfirmation(message) {
+    const overlay = document.getElementById("orderConfirmOverlay");
+    const copy = document.getElementById("orderConfirmCopy");
+    const yes = document.getElementById("orderConfirmYes");
+    const no = document.getElementById("orderConfirmNo");
+    copy.textContent = message;
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    const close = () => {
+      overlay.hidden = true;
+      document.body.style.overflow = "";
+    };
+    yes.onclick = close;
+    no.onclick = () => {
+      close();
+      document.getElementById("orderType").focus();
+    };
+    overlay.onclick = event => { if (event.target === overlay) close(); };
+    yes.focus();
+  }
   if (isTomatoLink) {
     document.getElementById("orderType").value = "Tomato avatar";
     syncOrderTypeFields("Tomato avatar");
-    window.setTimeout(() => window.alert("Are you redeeming a Tomato avatar?"), 150);
+    window.setTimeout(() => showOrderConfirmation("Are you redeeming a Tomato avatar? The amount field will stay hidden for this item."), 150);
   } else if (redeemParams.has("c") && requestedQuantity !== null) {
-    window.setTimeout(() => window.alert("Are you redeeming " + requestedQuantity.toLocaleString("en-US") + " coins?"), 150);
+    window.setTimeout(() => showOrderConfirmation("Are you redeeming " + requestedQuantity.toLocaleString("en-US") + " coins? The amount has been filled in for you."), 150);
   }
   if (requestedQuantity !== null && !isTomatoLink) {
     quantityInput.value = String(requestedQuantity);
