@@ -14,6 +14,7 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;min-height:100vh;padding:44px 18px 60px;background:#f2f2f2;color:var(--ink);font-family:Inter,Arial,sans-serif;overflow-x:hidden}
+.purchase-info{display:none;background:#fff;border:1px solid #dedede;border-radius:12px;padding:34px;margin:0 auto 20px;animation:fade-in .35s ease both}.purchase-info h1{margin-bottom:12px}.purchase-info p{font-size:14px;line-height:1.7;color:#666;margin:0 0 20px}.purchase-links{display:grid;gap:12px}.purchase-links a{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 18px;border:1px solid #dedede;border-radius:9px;color:#242424;text-decoration:none;font-weight:700;background:#fafafa;transition:background .15s,border-color .15s}.purchase-links a:hover{background:#f0f0f0;border-color:#aaa}.purchase-links a span{color:#777;font-size:12px;font-weight:500}@media(max-width:520px){.purchase-info{padding:25px 21px}}body.purchase-info-only .purchase-info{display:block}body.purchase-info-only .shell>.card:not(.purchase-info),body.purchase-info-only .shell>form,body.purchase-info-only .shell>.order-tools,body.purchase-info-only .shell>.privacy,body.purchase-info-only .shell>.brand{display:none!important}
 .shell{width:min(100%,720px);margin:0 auto}
 .shell>.card:first-child{border:1px solid #dedede;border-radius:12px;background:#fff;margin-bottom:20px;animation:fade-in .35s ease both}
 .intro{padding:38px 36px}
@@ -129,6 +130,14 @@ button:disabled{opacity:.42;cursor:not-allowed}
 </head>
 <body>
   <main class="shell">
+    <section class="purchase-info" aria-labelledby="purchaseInfoTitle">
+      <h1 id="purchaseInfoTitle">Already purchased?</h1>
+      <p>This page is for AFTER you have bought an item. Once your purchase is complete, use the link provided with your order to redeem it here.</p>
+      <div class="purchase-links">
+        <a href="https://ko-fi.com/s/c19f622539" target="_blank" rel="noopener noreferrer">Buy coins <span>Bag of gold</span></a>
+        <a href="https://ko-fi.com/s/b436f998ed" target="_blank" rel="noopener noreferrer">Buy the Tomato avatar 🍅 <span>Tomato avatar</span></a>
+      </div>
+    </section>
     <div class="card">
       <div class="banner"></div>
       <header class="intro">
@@ -419,6 +428,8 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const amount = Number(rawValue);
     return Number.isSafeInteger(amount) && amount >= 1 && amount <= 2147483647 ? amount : null;
   }
+
+  document.body.classList.toggle("purchase-info-only", window.location.search.length === 0);
 
   const requestedQuantity = getRequestedQuantity();
   const redeemParams = new URLSearchParams(window.location.search);
