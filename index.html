@@ -234,13 +234,13 @@ button:disabled{opacity:.42;cursor:not-allowed}
   // Accept both a short link such as ?250 and named forms such as ?quantity=250.
   // A valid amount preselects the coin pack order type and fills the quantity.
   function getRequestedQuantity() {
-    const rawSearch = window.location.search.replace(/^\\?/, "");
+    const rawSearch = window.location.search.replace(/^\?/, "");
     const params = new URLSearchParams(rawSearch);
     const firstParam = [...params.entries()][0];
-    const rawValue = /^\\d+$/.test(rawSearch) ? rawSearch
+    const rawValue = /^\d+$/.test(rawSearch) ? rawSearch
       : params.get("quantity") || params.get("qty") || params.get("coins") ||
-        params.get("amount") || (firstParam && /^\\d+$/.test(firstParam[0]) ? firstParam[0] : "");
-    if (!rawValue || !/^\\d+$/.test(rawValue)) return null;
+        params.get("amount") || (firstParam && /^\d+$/.test(firstParam[0]) ? firstParam[0] : "");
+    if (!rawValue || !/^\d+$/.test(rawValue)) return null;
     const amount = Number(rawValue);
     return Number.isSafeInteger(amount) && amount >= 1 && amount <= 2147483647 ? amount : null;
   }
@@ -252,6 +252,7 @@ button:disabled{opacity:.42;cursor:not-allowed}
     const quantityHint = document.querySelector('label[for="quantity"]');
     if (quantityHint) quantityHint.title = "Prefilled from the quantity in this link.";
   }
+
   const button = document.getElementById("submitButton");
   const status = document.getElementById("formStatus");
   const captchaHelp = document.getElementById("captchaHelp");
